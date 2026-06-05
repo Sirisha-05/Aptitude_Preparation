@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Sentence Completion Test App</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#f7f7fb;margin:0;padding:20px;color:#222}
+    .card{max-width:900px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:20px}
+    h1{margin:0 0 10px;font-size:28px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    button{border:0;border-radius:10px;padding:12px 16px;font-size:15px;cursor:pointer}
+    .primary{background:#4f46e5;color:#fff}.secondary{background:#e5e7eb}
+    .danger{background:#ef4444;color:#fff}.success{background:#10b981;color:#fff}
+    .timer{font-size:22px;font-weight:700}
+    .qbox{margin-top:18px;padding:16px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa}
+    .options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    label{display:block;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;background:#fff}
+    input[type=radio]{margin-right:8px}
+    .hidden{display:none}
+    .result{white-space:pre-wrap;background:#111827;color:#e5e7eb;padding:14px;border-radius:12px;overflow:auto;max-height:360px}
+    .small{font-size:13px;color:#555}
+    input[type=text], input[type=number]{padding:10px;border-radius:10px;border:1px solid #d1d5db;width:100px}
+    .footer{margin-top:14px;font-size:12px;color:#666}
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>Sentence Completion Test App</h1>
+  <div class="row">
+    <div>Questions: <input id="count" type="number" min="1" max="50" value="10"></div>
+    <div>Time/question (sec): <input id="tq" type="number" min="5" max="120" value="25"></div>
+    <button class="primary" onclick="startTest()">Start Test</button>
+    <button class="secondary" onclick="prevQ()">Prev</button>
+    <button class="secondary" onclick="nextQ()">Next</button>
+    <button class="success" onclick="downloadPDF()">Download PDF</button>
+    <button class="danger" onclick="resetAll()">Reset</button>
+  </div>
+  <p class="small">Timer starts per question. Questions are generated from a built-in practice set.</p>
+  <div class="row" style="margin-top:10px">
+    <div class="timer">Time left: <span id="time">--</span></div>
+    <div>Question: <span id="qn">0</span>/<span id="total">0</span></div>
+    <div>Score: <span id="score">0</span></div>
+  </div>
+  <div id="quiz" class="qbox hidden"></div>
+  <div id="review" class="qbox hidden"></div>
+  <div class="footer">Tip: Save this file as index.html and open in your browser. PDF export uses your browser's print-to-PDF.</div>
+</div>
+<script>
+const bank = [
+  {q:'She spoke with _____, and the room became silent.', opts:['authority','noise','confusion','hesitation'], a:0},
+  {q:'The manager asked for a _____ explanation of the delay.', opts:['brief','vague','loose','random'], a:0},
+  {q:'The team showed _____ by finishing the work early.', opts:['efficiency','delay','carelessness','fear'], a:0},
+  {q:'Although the task was difficult, she remained _____.', opts:['calm','irritable','absent','rough'], a:0},
+  {q:'He accepted the offer without _____ because it was fair.', opts:['reluctance','joy','speed','repair'], a:0},
+  {q:'The evidence was so _____ that no one doubted the result.', opts:['convincing','mysterious','weak','faint'], a:0},
+  {q:'They worked in _____ to finish before the deadline.', opts:['unison','noise','isolation','doubt'], a:0},
+  {q:'Her remarks were _____, so everyone understood the point.', opts:['precise','cloudy','silent','empty'], a:0},
+  {q:'The company plans to _____ its services next year.', opts:['expand','erase','pause','borrow'], a:0},
+  {q:'His apology sounded _____ and sincere.', opts:['genuine','rude','harsh','wild'], a:0},
+  {q:'The project needed _____ planning to avoid mistakes.', opts:['careful','casual','lazy','awkward'], a:0},
+  {q:'She was _____ by the clear logic of the argument.', opts:['persuaded','troubled','ignored','hidden'], a:0},
+  {q:'The children were _____ when they heard the good news.', opts:['delighted','fearful','bored','stiff'], a:0},
+  {q:'He gave a _____ answer and left no room for confusion.', opts:['direct','empty','late','messy'], a:0},
+  {q:'The solution was _____, so it worked in many situations.', opts:['versatile','fragile','limited','random'], a:0}
+];
+let questions=[], idx=0, score=0, timer=null, remaining=0, answers=[];
+function startTest(){
+  const n = Math.max(1, Math.min(50, parseInt(count.value)||10));
+  questions = [...bank].sort(()=>Math.random()-0.5).slice(0,n);
+  answers = Array(n).fill(null);
+  idx=0; score=0; total.textContent=n; qn.textContent='1'; quiz.classList.remove('hidden'); review.classList.add('hidden');
+  render(); startTimer();
+}
+function render(){
+  const q = questions[idx];
+  let html = `<div><b>Q${idx+1}.</b> ${q.q}</div><div class='options'>`;
+  q.opts.forEach((o,i)=>{html += `<label><input type='radio' name='opt' ${answers[idx]===i?'checked':''} onchange='answers[${idx}]=${i}'> ${String.fromCharCode(65+i)}. ${o}</label>`});
+  html += `</div>`;
+  quiz.innerHTML = html;
+  qn.textContent = idx+1;
+}
+function startTimer(){
+  clearInterval(timer);
+  remaining = parseInt(tq.value)||25;
+  time.textContent = remaining+'s';
+  timer = setInterval(()=>{
+    remaining--;
+    time.textContent = remaining+'s';
+    if(remaining<=0){
+      nextQ(true);
+    }
+  },1000);
+}
+function nextQ(auto=false){
+  if(idx<questions.length-1){ idx++; render(); startTimer(); }
+  else { finish(); }
+}
+function prevQ(){ if(idx>0){ idx--; render(); startTimer(); } }
+function finish(){
+  clearInterval(timer);
+  score = questions.reduce((s,q,i)=>s + (answers[i]===q.a ? 1 : 0),0);
+  quiz.classList.add('hidden'); review.classList.remove('hidden');
+  let out = `Score: ${score}/${questions.length}
+
+`;
+  questions.forEach((q,i)=>{ out += `${i+1}. ${q.q}
+   Your answer: ${answers[i]===null ? 'Not answered' : q.opts[answers[i]]}
+   Correct: ${q.opts[q.a]}
+
+`; });
+  review.innerHTML = `<div class='result'>${out.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+  score.textContent = `${score}/${questions.length}`;
+}
+function downloadPDF(){ window.print(); }
+function resetAll(){ clearInterval(timer); questions=[]; answers=[]; idx=0; score=0; qn.textContent='0'; total.textContent='0'; time.textContent='--'; score.textContent='0'; quiz.classList.add('hidden'); review.classList.add('hidden'); }
+</script>
+</body></html>

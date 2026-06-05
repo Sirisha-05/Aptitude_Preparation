@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TCS Time and Work Mock</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root,[data-theme="light"]{
+      --bg:#f6f7fb;--surface:#ffffff;--surface2:#eef2f7;--text:#141821;--muted:#5d6778;--border:#d8deea;
+      --primary:#0b6bcb;--primary2:#084f97;--ok:#0f9d58;--bad:#c62828;--warn:#ef6c00;--shadow:0 14px 40px rgba(15,23,42,.08);
+    }
+    [data-theme="dark"]{
+      --bg:#0f1218;--surface:#161b24;--surface2:#202735;--text:#edf2ff;--muted:#a7b2c7;--border:#2e3748;
+      --primary:#5aa2ff;--primary2:#8abaff;--ok:#45c27c;--bad:#ff7272;--warn:#ffb454;--shadow:0 16px 48px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}
+    .app{max-width:1320px;margin:auto;padding:20px;display:grid;grid-template-columns:280px 1fr;gap:18px;min-height:100vh}
+    .panel{background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow)}
+    .side{padding:18px;position:sticky;top:20px;height:fit-content}
+    .brand{display:flex;gap:12px;align-items:center;margin-bottom:18px}.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--primary2));display:grid;place-items:center;color:#fff;font-weight:800}
+    .brand h1{font-size:18px;margin:0}.muted{color:var(--muted)}
+    .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:999px;font-size:12px;font-weight:700}
+    .stat{padding:14px;border:1px solid var(--border);border-radius:14px;background:var(--surface2);margin-top:12px}
+    .stat .label{font-size:12px;color:var(--muted);margin-bottom:6px}.stat .value{font-size:26px;font-weight:800}
+    .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px}.qnav{height:42px;border-radius:12px;border:1px solid var(--border);background:var(--surface);font-weight:700;color:var(--text)}
+    .qnav.current{background:var(--primary);color:#fff;border-color:var(--primary)}.qnav.answered{outline:2px solid rgba(15,157,88,.22)}
+    .qnav.marked{outline:2px solid rgba(239,108,0,.3)}
+    .main{padding:18px;display:flex;flex-direction:column;gap:16px}.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+    .title{font-size:24px;font-weight:800}.timerbox{display:flex;gap:12px;flex-wrap:wrap}.timer{padding:12px 16px;border-radius:14px;background:var(--surface2);border:1px solid var(--border);min-width:180px}
+    .timer .tlabel{font-size:12px;color:var(--muted)}.timer .tvalue{font-size:28px;font-weight:800;margin-top:4px}
+    .question{padding:22px}.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}.badge{padding:8px 12px;border-radius:999px;background:var(--surface2);border:1px solid var(--border);font-size:12px;font-weight:700}
+    .qtext{font-size:20px;line-height:1.55;font-weight:600;margin-bottom:20px}.options{display:grid;gap:12px}.option{padding:16px;border:1px solid var(--border);border-radius:16px;background:var(--surface);cursor:pointer;text-align:left;font-size:16px}
+    .option:hover{border-color:var(--primary)} .option.selected{border-color:var(--primary);background:rgba(11,107,203,.08)}
+    .controls{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.leftctrl,.rightctrl{display:flex;gap:10px;flex-wrap:wrap}
+    button{border:none;border-radius:14px;padding:14px 18px;font-weight:700;font-size:14px;cursor:pointer;min-height:46px}
+    .primary{background:var(--primary);color:#fff}.secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.danger{background:#111827;color:#fff}
+    .screen{display:none}.screen.active{display:block}.intro{padding:24px}.intro h2{margin:0 0 10px}.intro ul{padding-left:18px;line-height:1.7}
+    .review{padding:22px}.review-card{border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;background:var(--surface2)}
+    .correct{color:var(--ok);font-weight:700}.wrong{color:var(--bad);font-weight:700}.explain{margin-top:10px;line-height:1.7}
+    .scoregrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}.score{padding:16px;border-radius:16px;background:var(--surface2);border:1px solid var(--border)}
+    .score .n{font-size:28px;font-weight:800}.small{font-size:13px}
+    @media (max-width: 980px){.app{grid-template-columns:1fr}.side{position:static}.grid{grid-template-columns:repeat(5,1fr)}}
+    @media (max-width: 640px){.grid{grid-template-columns:repeat(4,1fr)}.qtext{font-size:18px}.scoregrid{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel side">
+    <div class="brand">
+      <div class="logo">TW</div>
+      <div>
+        <h1>TCS NQT Mock</h1>
+        <div class="muted small">Numerical Ability · Time and Work</div>
+      </div>
+    </div>
+    <div class="chip">20 Questions · 1 min each</div>
+    <div class="stat"><div class="label">Question Timer</div><div class="value" id="sideTimer">01:00</div></div>
+    <div class="stat"><div class="label">Attempted</div><div class="value" id="attemptedCount">0</div></div>
+    <div class="stat"><div class="label">Marked for Review</div><div class="value" id="markedCount">0</div></div>
+    <div class="grid" id="qGrid"></div>
+  </aside>
+
+  <main class="panel main">
+    <section id="introScreen" class="screen active intro">
+      <div class="topbar">
+        <div>
+          <div class="title">Time and Work Test Application</div>
+          <p class="muted">Designed like a timed topic exam: 20 quality questions, 1 minute per question, auto-next on timeout, and full answer review after submission.</p>
+        </div>
+        <button class="secondary" id="themeToggle" aria-label="Toggle theme">Toggle theme</button>
+      </div>
+      <h2>Instructions</h2>
+      <ul>
+        <li>There are 20 questions based on TCS-style Time and Work patterns: direct work, combined work, efficiency, alternating schedules, men-days, and pipes.</li>
+        <li>Each question gets exactly 1 minute. When time ends, the test auto-moves to the next question.</li>
+        <li>You can move using Previous and Next while the question is active.</li>
+        <li>After the last question, click Submit Test to see score, answers, solutions, formulas used, and tricks.</li>
+      </ul>
+      <button class="primary" id="startBtn">Start Test</button>
+    </section>
+
+    <section id="testScreen" class="screen">
+      <div class="topbar">
+        <div class="title">Time and Work · Mock Test</div>
+        <div class="timerbox">
+          <div class="timer"><div class="tlabel">Current Question</div><div class="tvalue" id="topTimer">01:00</div></div>
+          <div class="timer"><div class="tlabel">Question Number</div><div class="tvalue" id="questionNo">1/20</div></div>
+        </div>
+      </div>
+      <div class="question">
+        <div class="meta">
+          <div class="badge" id="difficulty">Moderate</div>
+          <div class="badge">1 mark · No negative marking</div>
+        </div>
+        <div class="qtext" id="questionText"></div>
+        <div class="options" id="options"></div>
+      </div>
+      <div class="controls">
+        <div class="leftctrl">
+          <button class="secondary" id="prevBtn">Previous</button>
+          <button class="secondary" id="markBtn">Mark for Review</button>
+        </div>
+        <div class="rightctrl">
+          <button class="secondary" id="nextBtn">Next</button>
+          <button class="primary" id="submitBtn">Submit Test</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen review">
+      <div class="topbar">
+        <div>
+          <div class="title">Test Review</div>
+          <p class="muted">Scorecard with formula, situation, trick, and complete solution for every question.</p>
+        </div>
+        <button class="secondary" id="restartBtn">Restart Test</button>
+      </div>
+      <div class="scoregrid">
+        <div class="score"><div class="small muted">Score</div><div class="n" id="scoreVal">0/20</div></div>
+        <div class="score"><div class="small muted">Correct</div><div class="n" id="correctVal">0</div></div>
+        <div class="score"><div class="small muted">Wrong</div><div class="n" id="wrongVal">0</div></div>
+        <div class="score"><div class="small muted">Unanswered</div><div class="n" id="unansweredVal">0</div></div>
+      </div>
+      <div id="reviewList"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+const questions = [
+  {
+    difficulty:'Easy',
+    q:'A can complete a work in 12 days. What fraction of the work does A complete in one day?',
+    options:['1/12','1/6','12','1/24'],
+    answer:0,
+    formula:'If a person completes a job in x days, then one-day work = 1/x.',
+    situation:'Direct single-worker work-rate question.',
+    trick:'Single-worker questions are instant: just invert the total days.',
+    solution:'A takes 12 days for the whole work, so in 1 day A completes 1/12 of the work.'
+  },
+  {
+    difficulty:'Easy',
+    q:'A can do a work in 10 days and B can do the same work in 15 days. In how many days can they finish it together?',
+    options:['5 days','6 days','7.5 days','12 days'],
+    answer:1,
+    formula:'Combined one-day work = 1/10 + 1/15 = 1/6.',
+    situation:'Two workers work continuously together from start to finish.',
+    trick:'For two-worker continuous work, add rates, not days.',
+    solution:'A does 1/10 per day and B does 1/15 per day. Together they do 1/6 per day, so the work finishes in 6 days.'
+  },
+  {
+    difficulty:'Moderate',
+    q:'A, B, and C can complete a work in 12, 18, and 36 days respectively. In how many days will they complete it together?',
+    options:['5 days','6 days','7 days','8 days'],
+    answer:1,
+    formula:'Combined rate = 1/12 + 1/18 + 1/36 = 6/36 = 1/6.',
+    situation:'Three-worker shared-rate question.',
+    trick:'Use LCM 36 to avoid fractions: 3 + 2 + 1 = 6 units per day.',
+    solution:'Take total work as 36 units. A, B, and C do 3, 2, and 1 units per day, total 6 units. Time = 36/6 = 6 days.'
+  },
+  {
+    difficulty:'Easy',
+    q:'A is twice as efficient as B. If B can complete a work in 18 days, in how many days can A complete it?',
+    options:['6 days','9 days','12 days','15 days'],
+    answer:1,
+    formula:'Efficiency is inversely proportional to time.',
+    situation:'Efficiency comparison question.',
+    trick:'If efficiency doubles, time halves.',
+    solution:'A is 2 times as efficient as B, so A takes half of B\'s time. Half of 18 is 9 days.'
+  },
+  {
+    difficulty:'Easy',
+    q:'A can do a work in 20 days. After working alone for 5 days, what fraction of the work is left?',
+    options:['1/4','3/4','1/2','2/3'],
+    answer:1,
+    formula:'Work done in 5 days = 5/20 = 1/4. Remaining work = 1 - 1/4.',
+    situation:'Partial-work-then-remaining question.',
+    trick:'Find completed part first, then subtract from 1.',
+    solution:'A completes 1/20 of the work per day. In 5 days A completes 5/20 = 1/4. So remaining work = 3/4.'
+  },
+  {
+    difficulty:'Moderate',
+    q:'A and B together can do a work in 8 days. If A alone can do it in 12 days, B alone can do it in:',
+    options:['18 days','20 days','24 days','30 days'],
+    answer:2,
+    formula:'B\'s rate = 1/8 - 1/12 = 1/24.',
+    situation:'Together-time and one-worker-time given.',
+    trick:'Subtract known worker rate from combined rate.',
+    solution:'A + B do 1/8 of the work daily and A alone does 1/12. So B does 1/8 - 1/12 = 1/24 per day. Hence B takes 24 days.'
+  },
+  {
+    difficulty:'Easy',
+    q:'12 men can complete a work in 15 days. How many men are required to complete it in 9 days, assuming equal efficiency?',
+    options:['18','20','22','24'],
+    answer:1,
+    formula:'Men × Days = constant when individual efficiency is same.',
+    situation:'Men-days constant-work question.',
+    trick:'Use M1 × D1 = M2 × D2 only when every worker is identical in efficiency.',
+    solution:'12 × 15 = m × 9, so m = 180/9 = 20 men.'
+  },
+  {
+    difficulty:'Moderate',
+    q:'A can do a work in 24 days and B can do it in 8 days. They work together for 4 days. What fraction of the work is left?',
+    options:['1/2','1/3','1/4','0'],
+    answer:1,
+    formula:'Combined rate = 1/24 + 1/8 = 1/6. Work done in 4 days = 4/6 = 2/3.',
+    situation:'Joint work for limited days.',
+    trick:'After finding combined rate, multiply directly by the number of days worked.',
+    solution:'Together they do 1/6 of the work each day. In 4 days they do 4/6 = 2/3. So remaining work = 1/3.'
+  },
+  {
+    difficulty:'Moderate',
+    q:'If 3 men can do the same work as 4 women, and 12 women complete a work in 15 days, then 9 men will complete it in:',
+    options:['10 days','12 days','15 days','18 days'],
+    answer:2,
+    formula:'3 men = 4 women, so 9 men = 12 women.',
+    situation:'Worker conversion based on equivalent efficiency.',
+    trick:'First convert everyone to the same workforce unit before solving time.',
+    solution:'Since 3 men = 4 women, 9 men = 12 women. If 12 women complete the work in 15 days, 9 men also complete it in 15 days.'
+  },
+  {
+    difficulty:'Moderate',
+    q:'A can do a work in 30 days and B in 20 days. They work together for 4 days, then A leaves. How many more days will B take to finish the remaining work?',
+    options:['10','12','13 1/3','14'],
+    answer:2,
+    formula:'A+B rate = 1/30 + 1/20 = 1/12. Work done in 4 days = 1/3. Remaining = 2/3.',
+    situation:'One worker leaves midway.',
+    trick:'Always solve in phases: together phase, then remaining work phase.',
+    solution:'In 4 days A and B finish 4 × 1/12 = 1/3 of the work. Remaining work is 2/3. B alone does 1/20 per day, so required time = (2/3) ÷ (1/20) = 40/3 = 13 1/3 days.'
+  },
+  {
+    difficulty:'Moderate',
+    q:'A pipe fills a tank in 10 hours and another pipe empties it in 15 hours. If both are opened together, in how many hours will the tank be filled?',
+    options:['20','25','30','35'],
+    answer:2,
+    formula:'Net rate = 1/10 - 1/15 = 1/30.',
+    situation:'Pipe and cistern extension of Time and Work.',
+    trick:'Filling is positive, emptying is negative.',
+    solution:'The fill pipe adds 1/10 per hour and the emptying pipe removes 1/15 per hour. Net fill = 1/30 per hour. So the tank fills in 30 hours.'
+  },
+  {
+    difficulty:'Hard',
+    q:'A can finish a work in 16 days and B in 24 days. They work on alternate days starting with A. In how many days will the work be completed?',
+    options:['18','19','20','21'],
+    answer:1,
+    formula:'In 2 days, work done = 1/16 + 1/24 = 5/48.',
+    situation:'Alternate-day work pattern.',
+    trick:'Solve by cycle. Here 2-day cycles are easiest.',
+    solution:'In every 2 days they complete 5/48 of the work. In 18 days, 9 cycles are completed: 9 × 5/48 = 45/48 = 15/16. The remaining 1/16 is completed by A on day 19. So total time is 19 days.'
+  },
+  {
+    difficulty:'Easy',
+    q:'A is 50% more efficient than B. If A completes the work in 12 days, then B completes the work in:',
+    options:['16 days','18 days','20 days','24 days'],
+    answer:1,
+    formula:'50% more efficient means A:B efficiency = 3:2, so time ratio = 2:3.',
+    situation:'Efficiency given as percentage.',
+    trick:'Convert “50% more” to ratio 3:2, then invert for time.',
+    solution:'If A:B efficiency = 3:2, then A:B time = 2:3. If A takes 12 days, then B takes 12 × 3/2 = 18 days.'
+  },
+  {
+    difficulty:'Hard',
+    q:'A and B together can complete a work in 6 days, B and C in 8 days, and A and C in 12 days. In how many days can A alone complete the work?',
+    options:['8','10','12','16'],
+    answer:3,
+    formula:'A = [(A+B) + (A+C) - (B+C)] / 2.',
+    situation:'Three-worker pair-rate identity problem.',
+    trick:'Memorize pair-sum identity for A, B, or C alone.',
+    solution:'A\'s rate = (1/6 + 1/12 - 1/8) / 2 = (4/24 + 2/24 - 3/24) / 2 = 3/24 ÷ 2 = 1/16. So A alone completes the work in 16 days.'
+  },
+  {
+    difficulty:'Moderate',
+    q:'A can complete a work in 40 days. B is 60% as efficient as A. In how many days can B complete the same work?',
+    options:['24','40','60','66 2/3'],
+    answer:3,
+    formula:'Time is inversely proportional to efficiency.',
+    situation:'Lower-efficiency time conversion.',
+    trick:'If B has 60% of A\'s efficiency, B takes 1/0.6 times A\'s time.',
+    solution:'B\'s efficiency = 0.6 of A. Therefore B\'s time = 40 / 0.6 = 66 2/3 days.'
+  },
+  {
+    difficulty:'Hard',
+    q:'A and B together can do a work in 10 days, B and C in 12 days, and A and C in 15 days. In how many days can all three together finish the work?',
+    options:['8','9','10','12'],
+    answer:0,
+    formula:'2(A+B+C) = (A+B) + (B+C) + (A+C).',
+    situation:'All-three-together from three pair rates.',
+    trick:'Add pair rates and divide by 2.',
+    solution:'(1/10 + 1/12 + 1/15) = (6+5+4)/60 = 15/60 = 1/4. So all three together do 1/8 of the work per day, and finish in 8 days.'
+  },
+  {
+    difficulty:'Moderate',
+    q:'If A can do a work in 15 days and is 25% more efficient than B, then B can do the same work in:',
+    options:['18 days','18.75 days','20 days','22 days'],
+    answer:1,
+    formula:'25% more efficient means A:B efficiency = 5:4, so time ratio = 4:5.',
+    situation:'Efficiency percentage to time conversion.',
+    trick:'125:100 simplifies to 5:4.',
+    solution:'If A:B efficiency = 5:4, then A:B time = 4:5. If A takes 15 days, then B takes 15 × 5/4 = 18.75 days.'
+  },
+  {
+    difficulty:'Moderate',
+    q:'A pipe can fill a tank in 6 hours. Due to leakage, the tank gets filled in 8 hours. If the tank is full, in how many hours can the leakage empty it?',
+    options:['12','18','24','30'],
+    answer:2,
+    formula:'Leak rate = 1/6 - 1/8 = 1/24.',
+    situation:'Pipe with leakage.',
+    trick:'Net fill is slower because leak rate is subtracted from fill rate.',
+    solution:'Fill rate is 1/6 tank per hour, but actual net rate is 1/8. So leak rate = 1/6 - 1/8 = 1/24. Hence the leakage alone empties the tank in 24 hours.'
+  },
+  {
+    difficulty:'Hard',
+    q:'A completes half the work in 6 days and B completes the remaining half in 9 days. If they worked together from the beginning, the whole work would be completed in:',
+    options:['6 days','7 days','7.2 days','8 days'],
+    answer:2,
+    formula:'A full-work time = 12 days, B full-work time = 18 days.',
+    situation:'Half-work information converted to full-work rate.',
+    trick:'Convert partial completion data into full-job times first.',
+    solution:'If A does half the work in 6 days, A would finish the full job in 12 days. If B does half in 9 days, B would finish full work in 18 days. Together rate = 1/12 + 1/18 = 5/36, so time = 36/5 = 7.2 days.'
+  },
+  {
+    difficulty:'Hard',
+    q:'A can do a work in 9 days and B in 18 days. They work together, but every third day only A works. In how many days is the work completed?',
+    options:['6 days','6 2/3 days','7 days','7 1/3 days'],
+    answer:1,
+    formula:'Day 1 = 1/6, Day 2 = 1/6, Day 3 = 1/9. One 3-day cycle = 4/9.',
+    situation:'Repeating work schedule cycle.',
+    trick:'Convert the repeating pattern into one work cycle.',
+    solution:'In 3 days they complete 1/6 + 1/6 + 1/9 = 4/9. In 6 days they complete 8/9. Remaining work = 1/9. On the next combined day, they do 1/6 per day, so time for remaining work = (1/9) ÷ (1/6) = 2/3 day. Total = 6 2/3 days.'
+  }
+];
+
+let current = 0;
+let answers = Array(questions.length).fill(null);
+let marked = Array(questions.length).fill(false);
+let secondsLeft = 60;
+let timer = null;
+
+const introScreen = document.getElementById('introScreen');
+const testScreen = document.getElementById('testScreen');
+const resultScreen = document.getElementById('resultScreen');
+const qGrid = document.getElementById('qGrid');
+const questionText = document.getElementById('questionText');
+const optionsBox = document.getElementById('options');
+const topTimer = document.getElementById('topTimer');
+const sideTimer = document.getElementById('sideTimer');
+const questionNo = document.getElementById('questionNo');
+const difficulty = document.getElementById('difficulty');
+const attemptedCount = document.getElementById('attemptedCount');
+const markedCount = document.getElementById('markedCount');
+const reviewList = document.getElementById('reviewList');
+
+function fmt(sec){const m=String(Math.floor(sec/60)).padStart(2,'0');const s=String(sec%60).padStart(2,'0');return `${m}:${s}`;}
+function updateCounts(){attemptedCount.textContent = answers.filter(a=>a!==null).length; markedCount.textContent = marked.filter(Boolean).length;}
+function renderGrid(){qGrid.innerHTML=''; questions.forEach((_,i)=>{ const b=document.createElement('button'); b.className='qnav'+(i===current?' current':'')+(answers[i]!==null?' answered':'')+(marked[i]?' marked':''); b.textContent=i+1; b.onclick=()=>{current=i; resetTimer(); renderQuestion();}; qGrid.appendChild(b);});}
+function renderQuestion(){ const q=questions[current]; questionText.textContent=q.q; difficulty.textContent=q.difficulty; questionNo.textContent=`${current+1}/${questions.length}`; optionsBox.innerHTML=''; q.options.forEach((opt,idx)=>{ const btn=document.createElement('button'); btn.className='option'+(answers[current]===idx?' selected':''); btn.innerHTML=`<strong>${String.fromCharCode(65+idx)}.</strong> ${opt}`; btn.onclick=()=>{answers[current]=idx; updateCounts(); renderGrid(); renderQuestion();}; optionsBox.appendChild(btn);}); updateCounts(); renderGrid(); updateTimers(); }
+function updateTimers(){topTimer.textContent=fmt(secondsLeft); sideTimer.textContent=fmt(secondsLeft);} 
+function resetTimer(){clearInterval(timer); secondsLeft=60; updateTimers(); timer=setInterval(()=>{secondsLeft--; updateTimers(); if(secondsLeft<=0){nextQuestion(true);} },1000);} 
+function nextQuestion(auto=false){ if(current<questions.length-1){ current++; resetTimer(); renderQuestion(); } else { submitTest(); } }
+function prevQuestion(){ if(current>0){ current--; resetTimer(); renderQuestion(); } }
+function submitTest(){ clearInterval(timer); testScreen.classList.remove('active'); resultScreen.classList.add('active'); let correct=0, wrong=0, unanswered=0; reviewList.innerHTML=''; questions.forEach((q,i)=>{ if(answers[i]===null) unanswered++; else if(answers[i]===q.answer) correct++; else wrong++; const card=document.createElement('div'); card.className='review-card'; const status = answers[i]===null ? '<span class="wrong">Unanswered</span>' : answers[i]===q.answer ? '<span class="correct">Correct</span>' : '<span class="wrong">Wrong</span>'; const userAns = answers[i]===null ? 'Not answered' : `${String.fromCharCode(65+answers[i])}. ${q.options[answers[i]]}`; const corrAns = `${String.fromCharCode(65+q.answer)}. ${q.options[q.answer]}`; card.innerHTML = `<div class="small muted">Question ${i+1} · ${q.difficulty}</div><h3>${q.q}</h3><p>${status}</p><p><strong>Your answer:</strong> ${userAns}</p><p><strong>Correct answer:</strong> ${corrAns}</p><div class="explain"><p><strong>Formula:</strong> ${q.formula}</p><p><strong>Situation:</strong> ${q.situation}</p><p><strong>Trick:</strong> ${q.trick}</p><p><strong>Solution:</strong> ${q.solution}</p></div>`; reviewList.appendChild(card); }); document.getElementById('scoreVal').textContent = `${correct}/20`; document.getElementById('correctVal').textContent = correct; document.getElementById('wrongVal').textContent = wrong; document.getElementById('unansweredVal').textContent = unanswered; }
+function startTest(){ introScreen.classList.remove('active'); resultScreen.classList.remove('active'); testScreen.classList.add('active'); current=0; answers=Array(questions.length).fill(null); marked=Array(questions.length).fill(false); resetTimer(); renderQuestion(); }
+
+document.getElementById('startBtn').onclick=startTest;
+document.getElementById('nextBtn').onclick=()=>nextQuestion(false);
+document.getElementById('prevBtn').onclick=prevQuestion;
+document.getElementById('submitBtn').onclick=submitTest;
+document.getElementById('markBtn').onclick=()=>{marked[current]=!marked[current]; renderGrid(); updateCounts();};
+document.getElementById('restartBtn').onclick=()=>{introScreen.classList.add('active'); testScreen.classList.remove('active'); resultScreen.classList.remove('active'); clearInterval(timer); secondsLeft=60; updateTimers();};
+document.getElementById('themeToggle').onclick=()=>{document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');};
+renderGrid();
+updateCounts();
+</script>
+</body>
+</html>

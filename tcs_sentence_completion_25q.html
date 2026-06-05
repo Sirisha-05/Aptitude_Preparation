@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>TCS Style Sentence Completion Test</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f6fb;margin:0;padding:18px;color:#1f2937}
+.card{max-width:1100px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:20px}
+h1{margin:0 0 8px;font-size:28px} .muted{color:#6b7280;font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{border:0;border-radius:10px;padding:11px 14px;font-size:14px;cursor:pointer}
+.primary{background:#4f46e5;color:#fff}.secondary{background:#e5e7eb}.success{background:#10b981;color:#fff}.danger{background:#ef4444;color:#fff}
+input{padding:9px 10px;border:1px solid #d1d5db;border-radius:10px;width:110px}
+.badge{background:#eef2ff;color:#3730a3;padding:6px 10px;border-radius:999px;font-size:13px}
+.grid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px;margin-top:16px}
+.qbox,.pbox{border:1px solid #e5e7eb;border-radius:14px;padding:16px;background:#fafafa}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+label{display:block;padding:10px 12px;background:#fff;border:1px solid #d1d5db;border-radius:10px}
+.small{font-size:13px}.timer{font-size:22px;font-weight:700}
+.hidden{display:none}.result{white-space:pre-wrap;background:#111827;color:#e5e7eb;padding:14px;border-radius:12px;max-height:420px;overflow:auto}
+.sheet{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}.cell{padding:8px;border:1px solid #d1d5db;border-radius:10px;background:#fff;font-size:13px}
+.footer{margin-top:14px;font-size:12px;color:#6b7280}
+hr{border:none;border-top:1px solid #e5e7eb;margin:16px 0}
+@media print{button,.muted,.footer,.row input,.row .badge{display:none !important} body{background:#fff}.card{box-shadow:none} .grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>TCS-Style Sentence Completion Practice</h1>
+  <div class="muted">25 questions • 25 seconds each • answer sheet + explanations + PDF export for results and solutions</div>
+  <div class="row" style="margin-top:12px">
+    <span class="badge">Questions: 25</span>
+    <span class="badge">Timer: 25s/question</span>
+    <button class="primary" onclick="startTest()">Start Test</button>
+    <button class="secondary" onclick="prevQ()">Prev</button>
+    <button class="secondary" onclick="nextQ()">Next</button>
+    <button class="success" onclick="downloadPDF('solutions')">Download Solutions PDF</button>
+    <button class="success" onclick="downloadPDF('answers')">Download Answer Sheet PDF</button>
+    <button class="danger" onclick="resetAll()">Reset</button>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <div class="timer">Time left: <span id="time">--</span></div>
+    <div>Question: <span id="qn">0</span>/25</div>
+    <div>Score: <span id="score">0</span></div>
+  </div>
+  <div class="grid">
+    <div>
+      <div id="quiz" class="qbox hidden"></div>
+      <div id="review" class="qbox hidden"></div>
+    </div>
+    <div class="pbox">
+      <b>Answer Sheet</b>
+      <div class="small muted">Fill answers during the test. After completion, this sheet will show your final responses and correct answers.</div>
+      <div id="sheet" class="sheet"></div>
+      <hr>
+      <div class="small"><b>How to print PDF:</b> Use the browser print dialog after clicking a PDF button. Choose Save as PDF.</div>
+    </div>
+  </div>
+  <div class="footer">This is designed in TCS verbal style: grammar, tone, vocabulary, and context-based completion.</div>
+</div>
+<script>
+const bank = [
+{q:'Her response was so _____ that the entire team agreed immediately.',o:['persuasive','fragile','brief','silent'],a:0,e:'Persuasive means convincing and fits the context of immediate agreement.'},
+{q:'The manager demanded a _____ explanation for the missed deadline.',o:['clear','hasty','wild','faint'],a:0,e:'Clear matches the need for an explanation that removes confusion.'},
+{q:'Despite the pressure, he remained _____ and completed the task.',o:['composed','reckless','hesitant','vague'],a:0,e:'Composed means calm under pressure, which fits the contrast.'},
+{q:'The evidence was _____ enough to support the claim.',o:['strong','tiny','late','noisy'],a:0,e:'Strong evidence supports a claim effectively.'},
+{q:'They worked in _____ to finish the project on time.',o:['unison','isolation','doubt','silence'],a:0,e:'Unison implies coordinated effort.'},
+{q:'Her apology sounded _____ and sincere.',o:['genuine','random','sudden','ordinary'],a:0,e:'Genuine means real and sincere.'},
+{q:'The new policy should _____ efficiency across departments.',o:['improve','damage','delay','hide'],a:0,e:'Improve fits the positive outcome for efficiency.'},
+{q:'He gave a _____ answer, leaving no room for confusion.',o:['direct','weak','empty','noisy'],a:0,e:'Direct means straightforward and clear.'},
+{q:'The report was _____, so the client requested revisions.',o:['inaccurate','useful','balanced','sharp'],a:0,e:'Inaccurate explains why revisions were needed.'},
+{q:'She showed _____ by helping her colleague without hesitation.',o:['kindness','greed','anger','fear'],a:0,e:'Kindness matches helping behavior.'},
+{q:'The proposal was rejected because it was too _____.',o:['ambiguous','reliable','precise','logical'],a:0,e:'Ambiguous means unclear, a common rejection reason.'},
+{q:'Although the task was difficult, the students stayed _____.',o:['focused','irritated','careless','empty'],a:0,e:'Focused suits perseverance despite difficulty.'},
+{q:'The company plans to _____ its services next year.',o:['expand','discard','freeze','forget'],a:0,e:'Expand matches growth in services.'},
+{q:'His explanation was _____, and everyone understood it easily.',o:['concise','complicated','stiff','hidden'],a:0,e:'Concise means brief and clear.'},
+{q:'The team achieved results through careful _____ and execution.',o:['planning','waiting','guessing','noise'],a:0,e:'Planning fits a successful work process.'},
+{q:'She was _____ by the simple logic of the argument.',o:['convinced','injured','confused','removed'],a:0,e:'Convinced means persuaded by logic.'},
+{q:'The manager remained _____ during the crisis.',o:['calm','dramatic','careless','hostile'],a:0,e:'Calm is the best crisis behavior.'},
+{q:'The solution was _____ enough to work in different situations.',o:['flexible','narrow','weak','flat'],a:0,e:'Flexible fits multiple situations.'},
+{q:'They made a _____ effort to finish before the deadline.',o:['concerted','random','limited','silent'],a:0,e:'Concerted means coordinated and united.'},
+{q:'Her remarks were _____, so the audience did not misunderstand her.',o:['precise','hollow','slow','dark'],a:0,e:'Precise means exact and accurate.'},
+{q:'The data provided _____ support for the final conclusion.',o:['solid','faint','empty','noisy'],a:0,e:'Solid support is strong evidence.'},
+{q:'He accepted the offer without _____ because it was fair.',o:['reluctance','joy','delay','repair'],a:0,e:'Reluctance is hesitation, which the sentence denies.'},
+{q:'The project needed _____ attention to avoid errors.',o:['careful','casual','lazy','rapid'],a:0,e:'Careful attention reduces errors.'},
+{q:'Her skills made her a _____ member of the team.',o:['valuable','fragile','mild','tiny'],a:0,e:'Valuable means useful and important.'},
+{q:'The final decision was _____ after reviewing every detail.',o:['justified','random','harsh','silent'],a:0,e:'Justified means supported by reason and detail.'}
+];
+let idx=0, remaining=25, timer=null, score=0, started=false;
+let answers=Array(25).fill(null);
+function buildSheet(){ let s=''; for(let i=0;i<25;i++){ s += `<div class="cell">Q${i+1}: <b>${answers[i]===null?'-':String.fromCharCode(65+answers[i])}</b></div>`;} sheet.innerHTML=s; }
+function startTest(){ started=true; idx=0; score=0; answers=Array(25).fill(null); quiz.classList.remove('hidden'); review.classList.add('hidden'); render(); startTimer(); buildSheet(); }
+function render(){ const q=bank[idx]; let h=`<div><b>Q${idx+1}.</b> ${q.q}</div><div class='options'>`; q.o.forEach((opt,i)=>{ h += `<label><input type='radio' name='opt' ${answers[idx]===i?'checked':''} onchange='answers[${idx}]=${i}; buildSheet()'> ${String.fromCharCode(65+i)}. ${opt}</label>` }); h += `</div>`; quiz.innerHTML=h; qn.textContent=idx+1; buildSheet(); }
+function startTimer(){ clearInterval(timer); remaining=25; time.textContent=remaining+'s'; timer=setInterval(()=>{ remaining--; time.textContent=remaining+'s'; if(remaining<=0) nextQ(true); },1000); }
+function nextQ(auto=false){ if(!started) return; if(idx<24){ idx++; render(); startTimer(); } else finish(); }
+function prevQ(){ if(idx>0){ idx--; render(); startTimer(); } }
+function finish(){ clearInterval(timer); score = bank.reduce((s,q,i)=>s + (answers[i]===q.a ? 1 : 0),0); score.textContent=`${score}/25`; quiz.classList.add('hidden'); review.classList.remove('hidden'); let out=`Score: ${score}/25
+
+`; bank.forEach((q,i)=>{ out += `${i+1}. ${q.q}
+Your answer: ${answers[i]===null?'Not answered':q.o[answers[i]]}
+Correct answer: ${q.o[q.a]}
+Explanation: ${q.e}
+
+`; }); review.innerHTML = `<div class='result'>${out.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`; buildSheet(); }
+function downloadPDF(mode){ const w=window.open('','_blank'); let body=''; if(mode==='answers'){ body += `<h2>Answer Sheet</h2><div class='sheet'>` + bank.map((q,i)=>`<div class='cell'>Q${i+1}: ${answers[i]===null?'-':String.fromCharCode(65+answers[i])}</div>`).join('') + `</div>`; } else { body += `<h2>Solutions</h2><pre style='white-space:pre-wrap;font-family:Arial,sans-serif'>`; bank.forEach((q,i)=>{ body += `${i+1}. ${q.q}
+Correct answer: ${q.o[q.a]}
+Explanation: ${q.e}
+
+`; }); body += `</pre>`; } w.document.write(`<!doctype html><html><head><title>PDF</title><style>body{font-family:Arial,sans-serif;padding:24px}.sheet{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.cell{padding:8px;border:1px solid #999;border-radius:8px}.btn{margin-top:16px;padding:10px 14px}</style></head><body>${body}<button class='btn' onclick='window.print()'>Print / Save as PDF</button></body></html>`); w.document.close(); }
+function resetAll(){ clearInterval(timer); idx=0; remaining=25; score=0; started=false; answers=Array(25).fill(null); time.textContent='--'; qn.textContent='0'; score.textContent='0'; quiz.classList.add('hidden'); review.classList.add('hidden'); buildSheet(); }
+</script>
+</body></html>
